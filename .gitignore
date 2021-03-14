@@ -2,3 +2,4 @@
 venv/
 static/
 __pycache__/
+sent_emails/
