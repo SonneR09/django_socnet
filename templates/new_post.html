@@ -6,7 +6,7 @@
 <div class="row justify-content-center">
     <div class="col-md-8 p-5">
       <div class="card">
-        <div class="card-header">Добавить новую запись</div>
+        <div class="card-header">{% if not post.pub_date %}Добавить новую запись{% else %}Редактировать запись{% endif %}</div>
         <div class="card-body">
           {% if form.errors %}
           <div class="alert alert-danger" role="alert">
@@ -20,25 +20,35 @@
                 Пожалуйста, авторизуйтесь.
               </div>
           {% endif %}
-  
-            <form method="post" action="{% url 'new_post' %}">
-                {% csrf_token %}
-                <input type="hidden" name="next" value="{{ next }}">
-                {% for field in form %}
-                <div class="form-group row">
-                    <label for="{{ field.id_for_label }}" class="col-md-4 col-form-label text-md-right">{{ field.label }}</label>
-                    <div class="col-md-6">
-                        {{ field|addclass:"form-control" }}
-                    </div>
-                </div>
-                {% endfor %}
-                
-                <div class="col-md-6 offset-md-4">              
-                    <button type="submit" class="btn btn-primary">
+          {% if user.username == post.author.username %}
+          <form method="post" action="{% if not post.pub_date %} {% url 'new_post' %} {% else %} {% url 'post_edit' post.author post.id%} {% endif %}">
+              {% csrf_token %}
+              <input type="hidden" name="next" value="{{ next }}">
+              {% for field in form %}
+              <div class="form-group row">
+                  <label for="{{ field.id_for_label }}" class="col-md-4 col-form-label text-md-right">{{ field.label }}</label>
+                  <div class="col-md-6">
+                      {{ field|addclass:"form-control" }}
+                  </div>
+              </div>
+              {% endfor %}
+              
+              <div class="col-md-6 offset-md-4">              
+                  <button type="submit" class="btn btn-primary">
+                    {% if not post.pub_date %}
                       Опубликовать
-                    </button>
-                </div>
-            </form>
+                    {% else %}
+                      Сохранить
+                    {% endif %}
+                  </button>
+              </div>
+          </form>
+          {% else %}
+            <div class="alert alert-info" role="alert">
+              Вы не являетесь автором данной записи.
+            </div>
+          {% endif %}
+          
         </div> <!-- card body -->
       </div> <!-- card -->
     </div> <!-- col -->
