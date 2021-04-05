@@ -20,8 +20,8 @@
                 Пожалуйста, авторизуйтесь.
               </div>
           {% endif %}
-          {% if user.username == post.author.username %}
-          <form method="post" action="{% if not post.pub_date %} {% url 'new_post' %} {% else %} {% url 'post_edit' post.author post.id%} {% endif %}">
+          {% if user.username == post.author.username or not post.pub_date  %}
+          <form method="post" enctype="multipart/form-data" action="{% if not post.pub_date %} {% url 'new_post' %} {% else %} {% url 'post_edit' post.author post.id%} {% endif %}">
               {% csrf_token %}
               <input type="hidden" name="next" value="{{ next }}">
               {% for field in form %}

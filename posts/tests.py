@@ -25,6 +25,7 @@ class ProfileTest(TestCase):
         )
 
     def test_anon_cant_post(self):
+        self.client.logout()
         response = self.client.post(
             reverse('new_post'), data={'text':'test_text'}
         )
@@ -70,3 +71,8 @@ class ProfileTest(TestCase):
         for url in self.urls:
             response = self.client.get(url)
             self.assertContains(response, self.post.text)
+
+    def test_page404(self):
+        response = self.client.get('/3132qwqqwdwe/')
+        self.assertTemplateUsed(response, 'misc/404.html')
+        

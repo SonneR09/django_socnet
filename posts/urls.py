@@ -14,4 +14,7 @@ urlpatterns = [
         views.post_edit,
         name='post_edit'
     ),
+    path('404/', views.page_not_found, name='404'),
+    path('500/', views.server_error, name='500'),
+    path("<username>/<int:post_id>/comment", views.add_comment, name="add_comment"),
 ]
