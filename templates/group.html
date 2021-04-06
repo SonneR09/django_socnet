@@ -3,20 +3,11 @@
 {% block header %}Последние обновления в группе {{ group.title }}{% endblock %}
 {% block content %}
 {% for post in page %}
-    <h1>{{ post.author }}</h1>
-    <p>
-        {{ group.description }}
-    </p>
-
-    <h3>
-        Автор: {{ post.author }}, дата публикации: {{ post.pub_date|date:"d M Y" }}
-    </h3>
-    <p>{{ post.text }}</p>
-    <hr>
+    {% include "post_item.html" with post=post %}
 {% endfor %}
 
 {% if page.has_other_pages %}
-        {% include "paginator.html" with items=page paginator=paginator %}
+    {% include "paginator.html" with items=page paginator=paginator%}
 {% endif %}
 
 {% endblock %}

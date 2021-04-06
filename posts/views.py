@@ -67,7 +67,7 @@ def post_view(request, username, post_id):
         post = author.posts.get(id=post_id)
         form = CommentForm()
         items = post.comments.all()
-        context = {"author":author, "post":post, "form":form, "items":items}
+        context = {"post":post, "form":form, "items":items}
         return render(request, 'post.html', context)
 
 

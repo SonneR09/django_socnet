@@ -1,4 +1,5 @@
 {% load user_filters %}
+{% load widget_tweaks %}
 {% if user.is_authenticated %} 
 <div class="card my-4">
 <form
@@ -7,12 +8,12 @@
     {% csrf_token %}
     <h5 class="card-header">Добавить комментарий:</h5>
     <div class="card-body">
-    <form>
-        <div class="form-group textarea">
-        {{ form.text|addclass:"form-control" }}
-        </div>
-        <button type="submit" class="btn btn-primary">Отправить</button>
-    </form>
+        <form>
+            <div class="form-group textarea">
+            {% render_field form.text class+='form-control form-control-sm' rows='3'%}
+            </div>
+            <button type="submit" class="btn btn-primary">Отправить</button>
+        </form>
     </div>
 </form>
 </div>
