@@ -117,3 +117,25 @@ def add_comment(request, username, post_id):
             return redirect('post', username=username, post_id=post_id)
     
     return render(request, 'comments.html', {"form":form, 'items':post, 'profile':profile})
+
+
+@login_required
+def follow_index(request):
+    current_user = get_object_or_404(User, username=request.user)
+    following_authors = current_user.following
+    post_list = []
+    
+    if following_authors.count() != 0:
+        post_list = []
+        for author in following_authors:
+            post_list.append(author.posts)
+   
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+
+    return render(
+        request,
+     "follow.html", 
+     {"page":page, "paginator":paginator}
+     )

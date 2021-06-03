@@ -18,9 +18,22 @@
                 </div>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item">
+                        {% if following %}
+                        <a class="btn btn-lg btn-light" 
+                                href="#" role="button"> 
+                                Отписаться 
+                        </a> 
+                        {% else %}
+                        <a class="btn btn-lg btn-primary" 
+                                href="#" role="button">
+                        Подписаться 
+                        </a>
+                        {% endif %}
+                    </li>
+                    <li class="list-group-item">
                         <div class="h6 text-muted">
-                            Подписчиков: XXX <br />
-                            Подписан: XXX
+                            Подписчиков: {{ author.following.count }} <br />
+                            Подписан: {{ author.follower.count }}
                         </div>
                     </li>
                     <li class="list-group-item">
