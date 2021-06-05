@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %} Профиль пользователя {{ user.username }} {% endblock %}
+{% block title %} Профиль пользователя {{ author.username }} {% endblock %}
 {% block content %}
 {% load user_filters %}
 <main role="main" class="container">
@@ -17,19 +17,22 @@
                     </div>
                 </div>
                 <ul class="list-group list-group-flush">
+
+                    {% if user.is_authenticated %}
                     <li class="list-group-item">
                         {% if following %}
                         <a class="btn btn-lg btn-light" 
-                                href="#" role="button"> 
+                                href="{% url 'profile_unfollow' author.username %}" role="button"> 
                                 Отписаться 
                         </a> 
                         {% else %}
                         <a class="btn btn-lg btn-primary" 
-                                href="#" role="button">
+                                href="{% url 'profile_follow' author.username %}" role="button">
                         Подписаться 
                         </a>
                         {% endif %}
                     </li>
+                    {% endif %}
                     <li class="list-group-item">
                         <div class="h6 text-muted">
                             Подписчиков: {{ author.following.count }} <br />
