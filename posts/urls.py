@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-
+from rest_framework.authtoken import views as aviews
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -9,8 +9,8 @@ urlpatterns = [
     path('new_post/', views.new_post, name='new_post'),
     path("follow/", views.follow_index, name="follow_index"),
     path("<str:username>/follow", views.profile_follow, name='profile_follow'),
-    path("<str:username>/unfollow", views.profile_unfollow, name='profile_unfollow'),
-    path('<str:username>/', views.profile, name='profile'),
+    path("<str:username>/unfollow",
+         views.profile_unfollow, name='profile_unfollow'),
     path('<str:username>/<int:post_id>/', views.post_view, name='post'),
     path(
         '<str:username>/<int:post_id>/edit/',
@@ -19,5 +19,13 @@ urlpatterns = [
     ),
     path('404/', views.page_not_found, name='404'),
     path('500/', views.server_error, name='500'),
-    path("<username>/<int:post_id>/comment", views.add_comment, name="add_comment"),
+    path("<username>/<int:post_id>/comment",
+         views.add_comment, name="add_comment"),
+    path('<str:username>/', views.profile, name='profile'),
+]
+
+urlpatterns += [
+    path('api/v1/posts/', views.api_posts, name='api_posts'),
+    path('api/v1/posts/<int:id>', views.get_post, name='get_post'),
+    path('api/v1/api-token-auth/', aviews.obtain_auth_token),
 ]
