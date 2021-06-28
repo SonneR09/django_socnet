@@ -1,3 +1,4 @@
+from rest_framework import response
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -178,10 +179,23 @@ def profile_unfollow(request, username):
     return redirect('profile', username=username)
 
 
-def get_post(request, id):
+@api_view(["GET", "PUT", "PATCH", "DELETE"])
+def api_posts_detail(request, id):
     post = get_object_or_404(Post, id=id)
-    serializer = PostSerializer(post)
-    return JsonResponse(serializer.data)
+    if request.method == 'GET':
+        serializer = PostSerializer(post)
+        return Response(serializer.data)    
+    elif request.method == 'PUT' or request.method == 'PATCH':
+        serializer = PostSerializer(post, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save(author=request.user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
+    elif request.method == 'DELETE' and post.author.username == request.user.username:
+        post.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    else:
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
 
 @api_view(['GET', 'POST'])
@@ -191,10 +205,10 @@ def api_posts(request):
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    if request.method == 'POST':
+    elif request.method == 'POST':
          serializer = PostSerializer(data=request.data)
          if serializer.is_valid():
-             serializer.save()
+             serializer.save(author=request.user)
              return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

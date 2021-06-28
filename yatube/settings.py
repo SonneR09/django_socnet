@@ -10,10 +10,10 @@ DEBUG = True
 
 
 ALLOWED_HOSTS = [
-        "localhost",
-        "127.0.0.1",
-        "[::1]",
-        "testserver",
+    "localhost",
+    "127.0.0.1",
+    "[::1]",
+    "testserver",
 ]
 
 
@@ -93,7 +93,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-
 LANGUAGE_CODE = 'ru'
 
 TIME_ZONE = 'UTC'
@@ -115,16 +114,16 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Login
 # REST_FRAMEWORK = {
 #     'DEFAULT_PERMISSION_CLASSES': [
-#         'rest_framework.permissions.IsAuthenticated', 
+#         'rest_framework.permissions.IsAuthenticated',
 #     ],
-    
+
 #     'DEFAULT_AUTHENTICATION_CLASSES': [
 #         'rest_framework.authentication.TokenAuthentication',
 #     ]
 # }
 
 LOGIN_URL = "/auth/login/"
-LOGIN_REDIRECT_URL = "index" 
+LOGIN_REDIRECT_URL = "index"
 LOGOUT_REDIRECT_URL = "index"
 
 
@@ -136,3 +135,12 @@ SITE_ID = 1
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ]
+}

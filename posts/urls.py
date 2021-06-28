@@ -25,7 +25,7 @@ urlpatterns = [
 ]
 
 urlpatterns += [
+    path('api/v1/posts/<int:id>', views.api_posts_detail, name='api_posts_detail'),
     path('api/v1/posts/', views.api_posts, name='api_posts'),
-    path('api/v1/posts/<int:id>', views.get_post, name='get_post'),
-    path('api/v1/api-token-auth/', aviews.obtain_auth_token),
+    path('api/v1/token-auth/', aviews.obtain_auth_token),
 ]
