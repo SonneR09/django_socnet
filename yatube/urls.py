@@ -12,8 +12,9 @@ urlpatterns = [
     path('about-author/', views.flatpage, {'url': '/about-author/'}, name='about'),
     path('about-spec/', views.flatpage, {'url': 'about-spec/'}, name='terms'),
     path('', include('posts.urls')),
-    path('auth/', include('users.urls')),
+    path('', include('users.urls')),
     path('auth/', include('django.contrib.auth.urls')),
+    path('', include('api_yatube.urls')),
     
 ]
 

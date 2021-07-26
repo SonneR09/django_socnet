@@ -1,16 +1,9 @@
-from rest_framework import response
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.decorators import api_view
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
 
 from .models import Post, Group, User, Follow
 from .forms import PostForm, CommentForm
-from .serializers import PostSerializer
-from posts import serializers
 
 
 def index(request):
@@ -177,39 +170,3 @@ def profile_unfollow(request, username):
     follow.delete()
 
     return redirect('profile', username=username)
-
-
-@api_view(["GET", "PUT", "PATCH", "DELETE"])
-def api_posts_detail(request, id):
-    post = get_object_or_404(Post, id=id)
-    if request.method == 'GET':
-        serializer = PostSerializer(post)
-        return Response(serializer.data)    
-    elif request.method == 'PUT' or request.method == 'PATCH':
-        serializer = PostSerializer(post, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save(author=request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.data, status=status.HTTP_403_FORBIDDEN)
-    elif request.method == 'DELETE' and post.author.username == request.user.username:
-        post.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-    else:
-        return Response(status=status.HTTP_403_FORBIDDEN)
-
-
-@api_view(['GET', 'POST'])
-def api_posts(request):
-    if request.method == 'GET':
-        posts = Post.objects.all()
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    elif request.method == 'POST':
-         serializer = PostSerializer(data=request.data)
-         if serializer.is_valid():
-             serializer.save(author=request.user)
-             return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-

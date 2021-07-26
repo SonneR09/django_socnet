@@ -63,3 +63,4 @@ venv.bak/
 pythonenv*
 
 Makefile
+workspace.code-workspace

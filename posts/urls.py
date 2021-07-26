@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from rest_framework.authtoken import views as aviews
+
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -22,10 +22,4 @@ urlpatterns = [
     path("<username>/<int:post_id>/comment",
          views.add_comment, name="add_comment"),
     path('<str:username>/', views.profile, name='profile'),
-]
-
-urlpatterns += [
-    path('api/v1/posts/<int:id>', views.api_posts_detail, name='api_posts_detail'),
-    path('api/v1/posts/', views.api_posts, name='api_posts'),
-    path('api/v1/token-auth/', aviews.obtain_auth_token),
 ]
