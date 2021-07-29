@@ -1,9 +1,12 @@
 from django.shortcuts import get_object_or_404
+from rest_framework.decorators import action
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, permissions, status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 
 from posts.models import Post, Comment
 from posts.pagination import CustomPagination
@@ -12,11 +15,20 @@ from posts.serializers import PostSerializer, CommentSerializer
 from django.contrib.auth import get_user_model
 from .permissions import IsAuthorOrReadOnlyPermission
 
+
 User = get_user_model()
 
+
 class UserViewSet(ModelViewSet):
-    queryset = User.objects.all()
     serializer_class = UserSerializer
+    search_fields = ['username', ]
+
+    def get_queryset(self):
+        queryset = User.objects.all()
+        username = self.kwargs.get('username', None)
+        if username is not None:
+            queryset = queryset.filter(username=username)
+        return queryset
 
 
 class PostViewSet(ModelViewSet):
@@ -24,6 +36,8 @@ class PostViewSet(ModelViewSet):
     serializer_class = PostSerializer
     permission_classes = (IsAuthorOrReadOnlyPermission, )
     pagination_class = CustomPagination
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['pub_date', 'username']
 
     def create(self, request):
         if request.user.is_authenticated:
@@ -113,6 +127,17 @@ class CommentViewSet(ModelViewSet):
             return Response(status=status.HTTP_403_FORBIDDEN)
         comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+# class UserList(APIView):
+#     """ Для фильтрации через APIView"""
+#     permission_classes = (IsAuthorOrReadOnlyPermission, )
+
+#     def get(self, request, username):
+#         users = User.objects.filter(username=username)
+#         serializer = UserSerializer(users, many=True)
+
+#         return Response(serializer.data)
+
 
 # class APIPostDetail(APIView):
 
