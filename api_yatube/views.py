@@ -1,27 +1,23 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.decorators import action
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import generics, permissions, status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveDestroyAPIView
 from rest_framework import filters
 
-from posts.models import Post, Comment
-from posts.pagination import CustomPagination
+from posts.models import Group, Post, Comment, Follow
 from users.serializers import UserSerializer
-from posts.serializers import PostSerializer, CommentSerializer
-from django.contrib.auth import get_user_model
+from posts.serializers import PostSerializer, CommentSerializer, FollowerSerializer, GroupSerializer
 from .permissions import IsAuthorOrReadOnlyPermission
-
+from .filters import PostFilter
 
 User = get_user_model()
 
 
 class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
-    search_fields = ['username', ]
 
     def get_queryset(self):
         queryset = User.objects.all()
@@ -31,47 +27,24 @@ class UserViewSet(ModelViewSet):
         return queryset
 
 
-class PostViewSet(ModelViewSet):
+class PostListCreateAPIView(ListCreateAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = (IsAuthorOrReadOnlyPermission, )
-    pagination_class = CustomPagination
-    filter_backends = [filters.OrderingFilter]
-    ordering_fields = ['pub_date', 'username']
+    filter_class = PostFilter
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    search_fields = ['text', 'author__username']
 
-    def create(self, request):
-        if request.user.is_authenticated:
-            serializer = self.serializer_class(data=request.data)
-            if serializer.is_valid():
-                serializer.save(author=request.user)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_403_FORBIDDEN)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
-    def partial_update(self, request, pk=None):
-        post = get_object_or_404(self.queryset, pk=pk)
-        if request.user == post.author:
-            serializer = self.serializer_class(post, data=request.data)
-            if serializer.is_valid():
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_403_FORBIDDEN)
 
-    def update(self, request, pk=None):
-        post = get_object_or_404(self.queryset, pk=pk)
-        if request.user == post.author:
-            serializer = self.serializer_class(post, data=request.data)
-            if serializer.is_valid():
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_403_FORBIDDEN)
-
-    def destroy(self, request, pk=None):
-        post = get_object_or_404(self.queryset, pk=pk)
-        if request.user == post.author or request.user.is_superuser:
-            post.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(status=status.HTTP_403_FORBIDDEN)
+class PostRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = (IsAuthorOrReadOnlyPermission, )
+    filter_class = PostFilter
+    filter_backends = (DjangoFilterBackend, )
 
 
 class CommentViewSet(ModelViewSet):
@@ -94,7 +67,8 @@ class CommentViewSet(ModelViewSet):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_403_FORBIDDEN)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
         serializer.save(author=request.user, post=post)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -105,7 +79,8 @@ class CommentViewSet(ModelViewSet):
         if not request.user == comment.author:
             return Response(status=status.HTTP_403_FORBIDDEN)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -116,17 +91,83 @@ class CommentViewSet(ModelViewSet):
         if not request.user == comment.author:
             return Response(status=status.HTTP_403_FORBIDDEN)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def destroy(self, request, pk=None):
+    def destroy(self, request, post_id, pk=None):
         comment = get_object_or_404(Comment, pk=pk)
 
         if not request.user == comment.author:
             return Response(status=status.HTTP_403_FORBIDDEN)
         comment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class FollowListCreateAPIView(ListCreateAPIView):
+    queryset = Follow.objects.all()
+    serializer_class = FollowerSerializer
+    permission_classes = (IsAuthorOrReadOnlyPermission, )
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['=user__username', '=author__username']
+
+    def perform_create(self, serializer):
+        author_name = self.request.data.get("author", None)
+        author = get_object_or_404(User, username=author_name)
+        serializer.save(user=self.request.user, author=author)
+
+
+class GroupListCreateAPIView(ListCreateAPIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+
+    def perform_create(self, serializer):
+        title = self.request.data.get('title', None)
+        serializer.save(title=title)
+
+
+# class PostViewSet(ModelViewSet):
+#     queryset = Post.objects.all()
+#     serializer_class = PostSerializer
+#     permission_classes = (IsAuthorOrReadOnlyPermission, )
+#     pagination_class = CustomPagination
+#     filter_backends = [filters.OrderingFilter]
+#     ordering_fields = ['pub_date', 'username']
+
+#     def create(self, request):
+#         if request.user.is_authenticated:
+#             serializer = self.serializer_class(data=request.data)
+#             if serializer.is_valid():
+#                 serializer.save(author=request.user)
+#                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         return Response(status=status.HTTP_403_FORBIDDEN)
+
+#     def partial_update(self, request, pk=None):
+#         post = get_object_or_404(self.queryset, pk=pk)
+#         if request.user == post.author:
+#             serializer = self.serializer_class(post, data=request.data)
+#             if serializer.is_valid():
+#                 return Response(serializer.data, status=status.HTTP_200_OK)
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         return Response(status=status.HTTP_403_FORBIDDEN)
+
+#     def update(self, request, pk=None):
+#         post = get_object_or_404(self.queryset, pk=pk)
+#         if request.user == post.author:
+#             serializer = self.serializer_class(post, data=request.data)
+#             if serializer.is_valid():
+#                 return Response(serializer.data, status=status.HTTP_200_OK)
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         return Response(status=status.HTTP_403_FORBIDDEN)
+
+#     def destroy(self, request, pk=None):
+#         post = get_object_or_404(self.queryset, pk=pk)
+#         if request.user == post.author or request.user.is_superuser:
+#             post.delete()
+#             return Response(status=status.HTTP_204_NO_CONTENT)
+#         return Response(status=status.HTTP_403_FORBIDDEN)
 
 # class UserList(APIView):
 #     """ Для фильтрации через APIView"""
@@ -137,7 +178,6 @@ class CommentViewSet(ModelViewSet):
 #         serializer = UserSerializer(users, many=True)
 
 #         return Response(serializer.data)
-
 
 # class APIPostDetail(APIView):
 
@@ -169,7 +209,6 @@ class CommentViewSet(ModelViewSet):
 #             return Response(status=status.HTTP_204_NO_CONTENT)
 #         else:
 #             return Response(status=status.HTTP_403_FORBIDDEN)
-
 
 # @api_view(['GET', 'POST'])
 # def api_posts(request):

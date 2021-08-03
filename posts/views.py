@@ -12,11 +12,10 @@ def index(request):
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
 
-    return render(
-        request,
-        "index.html",
-        {"page": page, "paginator": paginator}
-    )
+    return render(request, "index.html", {
+        "page": page,
+        "paginator": paginator
+    })
 
 
 def group_posts(request, slug):
@@ -25,7 +24,11 @@ def group_posts(request, slug):
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    return render(request, 'group.html', {"page": page, "paginator": paginator})
+    return render(request, 'group.html', {
+        "page": page,
+        "paginator": paginator
+    })
+
 
 @login_required()
 def new_post(request):
@@ -77,8 +80,12 @@ def post_view(request, username, post_id):
         if Follow.objects.filter(user=current_user, author=author):
             following = True
 
-    context = {"post": post, "form": form,
-               "items": items, "following": following}
+    context = {
+        "post": post,
+        "form": form,
+        "items": items,
+        "following": following
+    }
     return render(request, 'post.html', context)
 
 
@@ -90,27 +97,30 @@ def post_edit(request, username, post_id):
         return redirect('post', username=username, post_id=post_id)
     # добавим в form свойство files
     form = PostForm(request.POST or None,
-                    files=request.FILES or None, instance=post)
+                    files=request.FILES or None,
+                    instance=post)
 
     if request.method == 'POST':
         if form.is_valid():
             form.save()
-            return redirect("post", username=request.user.username, post_id=post_id)
+            return redirect("post",
+                            username=request.user.username,
+                            post_id=post_id)
 
     return render(
-        request, 'new_post.html', {'form': form, 'post': post},
+        request,
+        'new_post.html',
+        {
+            'form': form,
+            'post': post
+        },
     )
 
 
 def page_not_found(request, exception):
     # Переменная exception содержит отладочную информацию,
     # выводить её в шаблон пользователской страницы 404 мы не станем
-    return render(
-        request,
-        "misc/404.html",
-        {"path": request.path},
-        status=404
-    )
+    return render(request, "misc/404.html", {"path": request.path}, status=404)
 
 
 def server_error(request):
@@ -130,7 +140,11 @@ def add_comment(request, username, post_id):
             comment.save()
             return redirect('post', username=username, post_id=post_id)
 
-    return render(request, 'comments.html', {"form": form, 'items': post, 'profile': profile})
+    return render(request, 'comments.html', {
+        "form": form,
+        'items': post,
+        'profile': profile
+    })
 
 
 @login_required
@@ -144,11 +158,10 @@ def follow_index(request):
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
 
-    return render(
-        request,
-        "follow.html",
-        {"page": page, "paginator": paginator}
-    )
+    return render(request, "follow.html", {
+        "page": page,
+        "paginator": paginator
+    })
 
 
 @login_required
